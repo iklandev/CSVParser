@@ -16,7 +16,13 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
+
+import org.apache.log4j.Logger;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -33,20 +39,25 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
-import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.Callback;
+import traffic.data.analysator.AverageRecord;
+import traffic.data.analysator.CSVRecord;
 import traffic.data.analysator.LotItem;
 import traffic.data.analysator.Main;
 import traffic.data.analysator.Util;
 
 public class MainScreenController {
 
+	public static final DateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
+	public static final DateFormat DATE_FORMAT_WITH_HOURS = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+	//static Logger logger = Logger.getLogger(MainScreenController.class.getName());
+	
 	@FXML
 	private Button btnChoose;
 
 	@FXML
-	private Button btnValidate;
+	private Button btnPercentageCalculation;
 
 	@FXML
 	private Button btnFinalMerge;
@@ -262,63 +273,220 @@ public class MainScreenController {
 	}
 
 	@FXML
-	private void validate(ActionEvent event) {
-		
-		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle("Open Resource File");
-		fileChooser.getExtensionFilters().addAll(new ExtensionFilter("CSV Files", "*.csv"));
-		File selectedFile = fileChooser.showOpenDialog(this.mainApp.getPrimaryStage());
+	private void calculatePercentage(ActionEvent event) {
 
-		
-		if (selectedFile != null) {
+		if (directory != null) {
+			logTextArea.appendText("Start calculating ...\n");
 			new Thread(() -> {
+				ArrayList<File> fileDir = new ArrayList<File>();
+				Util.listDirectory(directory, fileDir);
+				File[] files = fileDir.toArray(new File[fileDir.size()]);
 
-				final DateFormat dateFormat = new SimpleDateFormat("HH:mm dd/MM/yyyy");
+				int currentFile = 0;
+				final int totalFiles = files.length;
+				final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
+				final DateFormat dateFormat2 = new SimpleDateFormat("dd/MM/yyyy");
+				for (File file : files) {
 
-				try {
-					FileReader fr = new FileReader(selectedFile);
-					BufferedReader br = new BufferedReader(fr);
+					currentFile++;
+					final String currentFileName = file.getName();
+					final int currentFileTemp = currentFile;
+					if (currentFileName.contains(".csv")) {
+						Platform.runLater(new Runnable() {
+							@Override
+							public void run() {
+								logTextArea.appendText(String.format("%s: Processing %s/%s, file %s ...\n",
+										dateFormat.format(new Date()), currentFileTemp, totalFiles, currentFileName));
+							}
+						});
+						try {
+							FileReader fr = new FileReader(file);
+							BufferedReader br = new BufferedReader(fr);
 
-					String line;
-					int i = 1;
-					Calendar calCom = Calendar.getInstance();
-					while ((line = br.readLine()) != null) {
-						String[] csvParts = line.split(";");
-						Calendar cal = Calendar.getInstance();
-						cal.setTime(dateFormat.parse(csvParts[2]+" "+csvParts[0]));
-						if (i==1){
-							calCom.setTime(cal.getTime());
-						}
-						
-						if (!calCom.equals(cal)){
+							String line;
+							Date prevDate = null;
+							Date currentDate;
+							List<Integer> maxes = new ArrayList<Integer>();
+							LinkedHashMap<String, Integer> hmap = new LinkedHashMap<String, Integer>();
+							while ((line = br.readLine()) != null) {
+								String[] csvParts = line.split(";");
+								if (csvParts.length > 7 && csvParts[0] != null && !csvParts[0].equals("")
+										&& csvParts[7] != null && !csvParts[7].equals("")) {
+									if (prevDate == null) {
+										maxes.add(Integer.parseInt(csvParts[7]));
+										prevDate = DATE_FORMAT.parse(csvParts[0]);
+										continue;
+									}
+									currentDate = DATE_FORMAT.parse(csvParts[0]);
+									if (prevDate.equals(currentDate)) {
+										maxes.add(Integer.parseInt(csvParts[7]));
+									} else {
+										Integer max = maxes.stream().mapToInt(v -> v).max().getAsInt();
+										hmap.put(dateFormat2.format(prevDate), max);
+										maxes = new ArrayList<Integer>();
+										maxes.add(Integer.parseInt(csvParts[7]));
+									}
+									prevDate = currentDate;
+								}
+							}
+							
+							Integer max = maxes.stream().mapToInt(v -> v).max().getAsInt();
+							hmap.put(dateFormat2.format(prevDate), max);
+							// Save the maxes in file
+							Path filePath = Paths.get(directory.getAbsolutePath(), file.getName() + "-max.csv");
+							Files.write(filePath, Util.mapToString(hmap).getBytes(), CREATE, APPEND);
+
+							if (currentFile == totalFiles) {
+								Platform.runLater(new Runnable() {
+									@Override
+									public void run() {
+										logTextArea.appendText(
+												String.format("%s:Finsih...\n", dateFormat.format(new Date())));
+									}
+								});
+							}
+
+						} catch (Exception e) {
 							Platform.runLater(new Runnable() {
 								@Override
 								public void run() {
-									logTextArea.appendText(String.format("Expected %s but  found %s\n",
-											dateFormat.format(calCom.getTime()),dateFormat.format(cal.getTime())));
+									logTextArea.appendText(String.format("ERROR %s", e.getMessage()));
 								}
 							});
-							
-							calCom.setTime(cal.getTime());
-							calCom.add(Calendar.MINUTE, 4);
-						} else {
-							calCom.add(Calendar.MINUTE, 4);
 						}
-						i++;
-						
+					} else {
+						Platform.runLater(new Runnable() {
+							@Override
+							public void run() {
+								logTextArea.appendText(String.format(
+										"%s: Merging %s/%s, file %s don't match the template \n",
+										dateFormat.format(new Date()), currentFileTemp, totalFiles, currentFileName));
+							}
+						});
 					}
-
-				} catch (Exception e) {
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							logTextArea.appendText(String.format("ERROR %s",
-									e.getMessage()));
-						}
-					});
 				}
 
 			}).start();
 		}
 	}
+	
+	@FXML
+	private void calculateAverages(ActionEvent event) {
+
+		if (directory != null) {
+			logTextArea.appendText("Start calculating ...\n");
+			new Thread(() -> {
+				ArrayList<File> fileDir = new ArrayList<File>();
+				Util.listDirectory(directory, fileDir);
+				File[] files = fileDir.toArray(new File[fileDir.size()]);
+
+				int currentFile = 0;
+				final int totalFiles = files.length;
+				final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
+				for (File file : files) {
+
+					currentFile++;
+					final String currentFileName = file.getName();
+					final int currentFileTemp = currentFile;
+					if (currentFileName.contains(".csv")) {
+						Platform.runLater(new Runnable() {
+							@Override
+							public void run() {
+								logTextArea.appendText(String.format("%s: Processing %s/%s, file %s ...\n",
+										dateFormat.format(new Date()), currentFileTemp, totalFiles, currentFileName));
+							}
+						});
+						try {
+							FileReader fr = new FileReader(file);
+							BufferedReader br = new BufferedReader(fr);
+
+							String line;
+
+							List<CSVRecord> records = new ArrayList<CSVRecord>();
+
+							while ((line = br.readLine()) != null) {
+								records.add(new CSVRecord(line.split(";")));
+							}
+							
+							//Map<Integer, Map<String, List<CSVRecord>>> map = records.stream()
+								//	  .collect(Collectors.groupingBy(CSVRecord::getDayType, Collectors.groupingBy(CSVRecord::getTimeId)));
+							
+							//List<AverageRecord> result = new ArrayList<AverageRecord>();
+							//map.forEach((k, v) -> v.forEach ((k1, v1)-> result.add(new AverageRecord (k, k1, v1))));
+							
+							List<CSVRecord> finalRecords = new ArrayList<CSVRecord>();
+							Calendar cal = Calendar.getInstance();
+							cal.set(Calendar.YEAR, 2017);
+							cal.set(Calendar.MONTH, 9);
+							cal.set(Calendar.DAY_OF_MONTH, 1);
+							cal.set(Calendar.HOUR_OF_DAY, 0);
+							cal.set(Calendar.MINUTE, 0);
+							cal.set(Calendar.SECOND, 0);
+							cal.set(Calendar.MILLISECOND, 0);
+							for(CSVRecord rec : records){
+								Calendar comp = Calendar.getInstance();
+								comp.setTime(DATE_FORMAT_WITH_HOURS.parse(rec.getDate()+" "+rec.getTimeId()));
+								comp.set(Calendar.SECOND, 0);
+								comp.set(Calendar.MILLISECOND, 0);
+								//logger.info("Comp time:"+DATE_FORMAT_WITH_HOURS.format(comp.getTime()));
+								//logger.info("Calendar time:"+DATE_FORMAT_WITH_HOURS.format(cal.getTime()));
+								if(comp.equals(cal)){
+									//logger.info("They are equal");
+									finalRecords.add(rec);
+									cal.add(Calendar.MINUTE, 4);
+								} else {
+									//logger.info("They are not equal");
+									while (comp.after(cal)) {
+										finalRecords.add(Util.findRecordForTimeID(rec, cal));
+										cal.add(Calendar.MINUTE, 4);
+										//logger.info("Comp time:"+DATE_FORMAT_WITH_HOURS.format(comp.getTime()));
+										//logger.info("Calendar time:"+DATE_FORMAT_WITH_HOURS.format(cal.getTime()));
+										if (comp.equals(cal)){
+											//logger.info("They are equal in while");
+											finalRecords.add(rec);
+											cal.add(Calendar.MINUTE, 4);
+											break;
+										}
+										
+									}
+								}
+							}
+							
+							Path filePath = Paths.get(directory.getAbsolutePath(), file.getName() + "-final.csv");
+							Files.write(filePath, Util.listToString(finalRecords).getBytes(), CREATE, APPEND);
+
+							if (currentFile == totalFiles) {
+								Platform.runLater(new Runnable() {
+									@Override
+									public void run() {
+										logTextArea.appendText(
+												String.format("%s:Finsih...\n", dateFormat.format(new Date())));
+									}
+								});
+							}
+
+						} catch (Exception e) {
+							Platform.runLater(new Runnable() {
+								@Override
+								public void run() {
+									logTextArea.appendText(String.format("ERROR %s", e.getMessage()));
+								}
+							});
+						}
+					} else {
+						Platform.runLater(new Runnable() {
+							@Override
+							public void run() {
+								logTextArea.appendText(String.format(
+										"%s: Merging %s/%s, file %s don't match the template \n",
+										dateFormat.format(new Date()), currentFileTemp, totalFiles, currentFileName));
+							}
+						});
+					}
+				}
+
+			}).start();
+		}
+	}
+
 }
