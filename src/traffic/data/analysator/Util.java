@@ -78,7 +78,8 @@ public class Util {
 			//return null;
 		//}
 		
-		return new CSVRecord(DATE_FORMAT.format(calendar.getTime()), record.getLotId(), record.getCityId(), record.getLotName(), timeId, dayType, null);
+		//return new CSVRecord(DATE_FORMAT.format(calendar.getTime()), record.getLotId(), record.getCityId(), record.getLotName(), timeId, dayType, null);
+		return null;
 	}
 
 }

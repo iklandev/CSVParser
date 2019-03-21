@@ -42,6 +42,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.util.Callback;
 import traffic.data.analysator.AverageRecord;
 import traffic.data.analysator.CSVRecord;
+import traffic.data.analysator.Lot;
 import traffic.data.analysator.LotItem;
 import traffic.data.analysator.Main;
 import traffic.data.analysator.Util;
@@ -51,8 +52,9 @@ public class MainScreenController {
 	public static final DateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
 	public static final DateFormat DATE_FORMAT_WITH_HOURS = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
-	//static Logger logger = Logger.getLogger(MainScreenController.class.getName());
-	
+	// static Logger logger =
+	// Logger.getLogger(MainScreenController.class.getName());
+
 	@FXML
 	private Button btnChoose;
 
@@ -273,7 +275,7 @@ public class MainScreenController {
 	}
 
 	@FXML
-	private void calculatePercentage(ActionEvent event) {
+	private void calculateMaxes(ActionEvent event) {
 
 		if (directory != null) {
 			logTextArea.appendText("Start calculating ...\n");
@@ -329,7 +331,7 @@ public class MainScreenController {
 									prevDate = currentDate;
 								}
 							}
-							
+
 							Integer max = maxes.stream().mapToInt(v -> v).max().getAsInt();
 							hmap.put(dateFormat2.format(prevDate), max);
 							// Save the maxes in file
@@ -369,7 +371,7 @@ public class MainScreenController {
 			}).start();
 		}
 	}
-	
+
 	@FXML
 	private void calculateAverages(ActionEvent event) {
 
@@ -405,15 +407,19 @@ public class MainScreenController {
 							List<CSVRecord> records = new ArrayList<CSVRecord>();
 
 							while ((line = br.readLine()) != null) {
-								records.add(new CSVRecord(line.split(";")));
+								records.add(new CSVRecord(line.split(";"), 0));
 							}
-							
-							//Map<Integer, Map<String, List<CSVRecord>>> map = records.stream()
-								//	  .collect(Collectors.groupingBy(CSVRecord::getDayType, Collectors.groupingBy(CSVRecord::getTimeId)));
-							
-							//List<AverageRecord> result = new ArrayList<AverageRecord>();
-							//map.forEach((k, v) -> v.forEach ((k1, v1)-> result.add(new AverageRecord (k, k1, v1))));
-							
+
+							// Map<Integer, Map<String, List<CSVRecord>>> map =
+							// records.stream()
+							// .collect(Collectors.groupingBy(CSVRecord::getDayType,
+							// Collectors.groupingBy(CSVRecord::getTimeId)));
+
+							// List<AverageRecord> result = new
+							// ArrayList<AverageRecord>();
+							// map.forEach((k, v) -> v.forEach ((k1, v1)->
+							// result.add(new AverageRecord (k, k1, v1))));
+
 							List<CSVRecord> finalRecords = new ArrayList<CSVRecord>();
 							Calendar cal = Calendar.getInstance();
 							cal.set(Calendar.YEAR, 2017);
@@ -423,35 +429,40 @@ public class MainScreenController {
 							cal.set(Calendar.MINUTE, 0);
 							cal.set(Calendar.SECOND, 0);
 							cal.set(Calendar.MILLISECOND, 0);
-							for(CSVRecord rec : records){
+							for (CSVRecord rec : records) {
 								Calendar comp = Calendar.getInstance();
-								comp.setTime(DATE_FORMAT_WITH_HOURS.parse(rec.getDate()+" "+rec.getTimeId()));
+								comp.setTime(DATE_FORMAT_WITH_HOURS.parse(rec.getDate() + " " + rec.getTimeId()));
 								comp.set(Calendar.SECOND, 0);
 								comp.set(Calendar.MILLISECOND, 0);
-								//logger.info("Comp time:"+DATE_FORMAT_WITH_HOURS.format(comp.getTime()));
-								//logger.info("Calendar time:"+DATE_FORMAT_WITH_HOURS.format(cal.getTime()));
-								if(comp.equals(cal)){
-									//logger.info("They are equal");
+								// logger.info("Comp
+								// time:"+DATE_FORMAT_WITH_HOURS.format(comp.getTime()));
+								// logger.info("Calendar
+								// time:"+DATE_FORMAT_WITH_HOURS.format(cal.getTime()));
+								if (comp.equals(cal)) {
+									// logger.info("They are equal");
 									finalRecords.add(rec);
 									cal.add(Calendar.MINUTE, 4);
 								} else {
-									//logger.info("They are not equal");
+									// logger.info("They are not equal");
 									while (comp.after(cal)) {
 										finalRecords.add(Util.findRecordForTimeID(rec, cal));
 										cal.add(Calendar.MINUTE, 4);
-										//logger.info("Comp time:"+DATE_FORMAT_WITH_HOURS.format(comp.getTime()));
-										//logger.info("Calendar time:"+DATE_FORMAT_WITH_HOURS.format(cal.getTime()));
-										if (comp.equals(cal)){
-											//logger.info("They are equal in while");
+										// logger.info("Comp
+										// time:"+DATE_FORMAT_WITH_HOURS.format(comp.getTime()));
+										// logger.info("Calendar
+										// time:"+DATE_FORMAT_WITH_HOURS.format(cal.getTime()));
+										if (comp.equals(cal)) {
+											// logger.info("They are equal in
+											// while");
 											finalRecords.add(rec);
 											cal.add(Calendar.MINUTE, 4);
 											break;
 										}
-										
+
 									}
 								}
 							}
-							
+
 							Path filePath = Paths.get(directory.getAbsolutePath(), file.getName() + "-final.csv");
 							Files.write(filePath, Util.listToString(finalRecords).getBytes(), CREATE, APPEND);
 
@@ -470,6 +481,84 @@ public class MainScreenController {
 								@Override
 								public void run() {
 									logTextArea.appendText(String.format("ERROR %s", e.getMessage()));
+								}
+							});
+						}
+					} else {
+						Platform.runLater(new Runnable() {
+							@Override
+							public void run() {
+								logTextArea.appendText(String.format(
+										"%s: Merging %s/%s, file %s don't match the template \n",
+										dateFormat.format(new Date()), currentFileTemp, totalFiles, currentFileName));
+							}
+						});
+					}
+				}
+
+			}).start();
+		}
+	}
+
+	@FXML
+	private void calculatePercentage(ActionEvent event) {
+
+		if (directory != null) {
+			logTextArea.appendText("Start calculating ...\n");
+			new Thread(() -> {
+				ArrayList<File> fileDir = new ArrayList<File>();
+				Util.listDirectory(directory, fileDir);
+				File[] files = fileDir.toArray(new File[fileDir.size()]);
+
+				int currentFile = 0;
+				final int totalFiles = files.length;
+				final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
+				for (File file : files) {
+
+					currentFile++;
+					final String currentFileName = file.getName();
+					final int currentFileTemp = currentFile;
+					if (currentFileName.contains(".csv")) {
+						Platform.runLater(new Runnable() {
+							@Override
+							public void run() {
+								logTextArea.appendText(String.format("%s: Processing %s/%s, file %s ...\n",
+										dateFormat.format(new Date()), currentFileTemp, totalFiles, currentFileName));
+							}
+						});
+						try {
+							FileReader fr = new FileReader(file);
+							BufferedReader br = new BufferedReader(fr);
+
+							String line;
+                            String cityId = currentFileName.replace(".csv", "");
+                            Lot lot = Lot.getLotForId(cityId);
+                            List<CSVRecord> records = new ArrayList<>();
+                            
+							while ((line = br.readLine()) != null) {
+								String[] csvParts = line.split(";");
+								records.add(new CSVRecord(csvParts, lot.getMaxSpaces()));
+							}
+
+							// Save the maxes in file
+							Path filePath = Paths.get(file.getParentFile().getAbsolutePath(), file.getName() + "-percentage.csv");
+							Files.write(filePath, Util.listToString(records).getBytes(), CREATE, APPEND);
+
+							if (currentFile == totalFiles) {
+								Platform.runLater(new Runnable() {
+									@Override
+									public void run() {
+										logTextArea.appendText(
+												String.format("%s:Finsih...\n", dateFormat.format(new Date())));
+									}
+								});
+							}
+
+						} catch (Exception e) {
+							Platform.runLater(new Runnable() {
+								@Override
+								public void run() {
+									logTextArea.appendText(String.format("ERROR %s", e));
 								}
 							});
 						}

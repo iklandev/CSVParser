@@ -32,7 +32,7 @@ public class AverageRecord {
 	private int freeParkingSpaces;
 	
 	public AverageRecord (int dayType, String timeId, List<CSVRecord> records) {
-		
+/*		
 		this.dayType = dayType;
 		this.timeId = timeId;
 		
@@ -93,7 +93,7 @@ public class AverageRecord {
 		stats = records.stream()
                 .mapToDouble((x) -> x.getAvgOUTForRadius_3().doubleValue())
                 .summaryStatistics();
-		this.avgOUTForRadius_3 = new BigDecimal(stats.getAverage()).setScale(2, BigDecimal.ROUND_HALF_UP);
+		this.avgOUTForRadius_3 = new BigDecimal(stats.getAverage()).setScale(2, BigDecimal.ROUND_HALF_UP);*/
 	}
 
 	public String getTimeId() {

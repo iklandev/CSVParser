@@ -1,9 +1,12 @@
 package traffic.data.analysator;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 
 public class CSVRecord {
+	
+	private static int lineNumber = 1;
 
 	private String date;
 
@@ -28,18 +31,18 @@ public class CSVRecord {
 	private BigDecimal totalJamINRadius_3;
 	private BigDecimal totalJamOUTRadius_3;
 
-	private BigDecimal avgINForRadius_1;
+/*	private BigDecimal avgINForRadius_1;
 	private BigDecimal avgOUTForRadius_1;
 
 	private BigDecimal avgINForRadius_2;
 	private BigDecimal avgOUTForRadius_2;
 
 	private BigDecimal avgINForRadius_3;
-	private BigDecimal avgOUTForRadius_3;
+	private BigDecimal avgOUTForRadius_3;*/
 
-	private Integer freeParkingSpaces;
+	private BigDecimal freeParkingSpaces;
 
-	public CSVRecord(String[] csvParts) throws ParseException {
+	public CSVRecord(String[] csvParts, int garageMaxes) throws ParseException {
 
 		this.date = csvParts[0];
 		this.time = csvParts[1];
@@ -49,7 +52,12 @@ public class CSVRecord {
 		this.cityId = csvParts[5];
 		this.lotName = csvParts[6];
 
-		this.freeParkingSpaces = Integer.parseInt(csvParts[7]);
+		this.freeParkingSpaces = new BigDecimal(csvParts[7]).divide(new BigDecimal(garageMaxes), 2, BigDecimal.ROUND_DOWN);
+		if(this.freeParkingSpaces.compareTo(new BigDecimal(1)) == 1){
+			this.freeParkingSpaces = new BigDecimal(1);
+		}
+		
+		this.freeParkingSpaces.setScale(2, BigDecimal.ROUND_DOWN);
 
 		this.totalJamINRadius_1 = new BigDecimal(csvParts[8]);
 		this.totalJamOUTRadius_1 = new BigDecimal(csvParts[9]);
@@ -60,17 +68,17 @@ public class CSVRecord {
 		this.totalJamINRadius_3 = new BigDecimal(csvParts[12]);
 		this.totalJamOUTRadius_3 = new BigDecimal(csvParts[13]);
 
-		this.avgINForRadius_1 = new BigDecimal(csvParts[14]);
+/*		this.avgINForRadius_1 = new BigDecimal(csvParts[14]);
 		this.avgOUTForRadius_1 = new BigDecimal(csvParts[15]);
 
 		this.avgINForRadius_2 = new BigDecimal(csvParts[16]);
 		this.avgOUTForRadius_2 = new BigDecimal(csvParts[17]);
 
 		this.avgINForRadius_3 = new BigDecimal(csvParts[18]);
-		this.avgOUTForRadius_3 = new BigDecimal(csvParts[19]);
+		this.avgOUTForRadius_3 = new BigDecimal(csvParts[19]);*/
 	}
 
-	public CSVRecord(String date, String lotId, String cityId, String lotName, String timeId, int dayType, AverageRecord ar) {
+	/*public CSVRecord(String date, String lotId, String cityId, String lotName, String timeId, int dayType, AverageRecord ar) {
 		this.date = date;
 		this.time = timeId;
 		this.timeId = timeId;
@@ -100,7 +108,7 @@ public class CSVRecord {
 			this.avgINForRadius_3 = ar.getAvgINForRadius_3();
 			this.avgOUTForRadius_3 = ar.getAvgOUTForRadius_3();
 		}
-	}
+	}*/
 
 	public String getDate() {
 		return date;
@@ -154,7 +162,7 @@ public class CSVRecord {
 		return totalJamOUTRadius_3;
 	}
 
-	public BigDecimal getAvgINForRadius_1() {
+/*	public BigDecimal getAvgINForRadius_1() {
 		return avgINForRadius_1;
 	}
 
@@ -176,28 +184,38 @@ public class CSVRecord {
 
 	public BigDecimal getAvgOUTForRadius_3() {
 		return avgOUTForRadius_3;
-	}
+	}*/
 
-	public int getFreeParkingSpaces() {
+	public BigDecimal getFreeParkingSpaces() {
 		return freeParkingSpaces;
 	}
 
 	@Override
 	public String toString() {
-		return date + ";" + time + ";" + timeId + ";" + dayType + ";" + lotId + ";" + cityId + ";" + lotName + ";"
-				+ (freeParkingSpaces != null ? freeParkingSpaces : "")   + ";" 
+		
+		String freeParkingSpacesString = "";
+		if (freeParkingSpaces != null){
+			DecimalFormat df = new DecimalFormat();
+			df.setMaximumFractionDigits(2);
+			df.setMinimumFractionDigits(2);
+			df.setGroupingUsed(false);
+			freeParkingSpacesString = df.format(freeParkingSpaces);
+		}
+	    
+		return date + ";" + timeId + ";" + dayType + ";" + lotId + ";"
+				+ (freeParkingSpaces != null ? freeParkingSpacesString : "")   + ";" 
 				+ (totalJamINRadius_1 != null ? totalJamINRadius_1 : "")    + ";" 
 				+ (totalJamOUTRadius_1 != null ? totalJamOUTRadius_1 : "")   + ";" 
 				+ (totalJamINRadius_2 != null ? totalJamINRadius_2 : "")   + ";" 
 				+ (totalJamOUTRadius_2 != null ? totalJamOUTRadius_2 : "")    + ";" 
 				+ (totalJamINRadius_3 != null ? totalJamINRadius_3 : "")    + ";" 
-				+ (totalJamOUTRadius_3 != null ? totalJamOUTRadius_3 : "")    + ";"
-				+ (avgINForRadius_1 != null ? avgINForRadius_1 : "")    + ";" 
+				+ (totalJamOUTRadius_3 != null ? totalJamOUTRadius_3 : "")    + "\n";
+/*				+ (avgINForRadius_1 != null ? avgINForRadius_1 : "")    + ";" 
 				+ (avgOUTForRadius_1 != null ? avgOUTForRadius_1 : "")    + ";" 
 				+ (avgINForRadius_2 != null ? avgINForRadius_2 : "")    + ";" 
 				+ (avgOUTForRadius_2 != null ? avgOUTForRadius_2 : "")    + ";"
 				+ (avgINForRadius_3 != null ? avgINForRadius_3 : "")    + ";" 
-				+ (avgOUTForRadius_3 != null ? avgOUTForRadius_3 : "")    + "\n";
+				+ (avgOUTForRadius_3 != null ? avgOUTForRadius_3 : "")    + "\n";*/
 	}
 
 }
