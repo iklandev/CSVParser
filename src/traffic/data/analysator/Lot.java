@@ -6,7 +6,7 @@ import java.util.List;
 
 public enum Lot {
 	
-	//Pittsburgh
+	//Pittsburgh (19)
 	Theater_Square ("1_2", 1, new BigDecimal(40.443869), new BigDecimal(-80.00061), 580), //Checked
 	ConventionCenter ("1_4", 1, new BigDecimal(40.445537), new BigDecimal(-79.995132), 676), //Checked
 	Sixth_and_Penn ("1_5", 1, new BigDecimal(40.44256246), new BigDecimal(-80.00246286), 442), //Checked
@@ -32,7 +32,7 @@ public enum Lot {
 	Oliver ("1_41", 1, new BigDecimal(40.44089673), new BigDecimal(-79.99906182), 485), //Checked
 	First_Avenue ("1_42", 1, new BigDecimal(40.43505001), new BigDecimal(-79.99605775), 1260), //Checked
 	
-	//Madison
+	//Madison (6)
 	Overture_Center_Garage ("2_1", 2, new BigDecimal(43.073356), new BigDecimal(-89.389362), 650), //Checked
 	State_Street_Capitol_Garage ("2_2", 2, new BigDecimal(43.075482), new BigDecimal(-89.388118), 625), //Checked
 	Government_East_Garage ("2_3", 2, new BigDecimal(43.073936), new BigDecimal(-89.380267), 500), //Checked
@@ -40,13 +40,13 @@ public enum Lot {
 	Capitol_Square_North_Garage ("2_6", 2, new BigDecimal(43.07764), new BigDecimal(-89.38326), 560),//Checked
 	Brayton_Lot ("2_9", 2, new BigDecimal(43.076751), new BigDecimal(-89.38022), 245), //Checked
 	
-	//Asheville
+	//Asheville (4)
 	Biltmore_Ave ("3_BI", 3, new BigDecimal(35.592445), new BigDecimal(-82.551773), 325), //Checked
 	Civic_Center ("3_CI", 3, new BigDecimal(35.596867), new BigDecimal(-82.554126), 500), //Checked
 	Rankin_Ave ("3_RA", 3, new BigDecimal(35.596133), new BigDecimal(-82.554072), 210), //Checked
 	Wall_Street ("3_WA", 3, new BigDecimal(35.594614), new BigDecimal(-82.557025), 205), //Checked
 	
-	//AnnArbor
+	//AnnArbor (10)
 	Ann_Ashley_Structure ("4_AN7", 4, new BigDecimal(42.2826333), new BigDecimal(-83.7496376), 800), //Checked
 	First_and_Washington_Structure ("4_FI2", 4, new BigDecimal(42.2804774), new BigDecimal(-83.7500788), 250), //Checked
 	First_and_Huron_Lot ("4_FI10", 4, new BigDecimal(42.281444), new BigDecimal(-83.749812), 58), //Checked
@@ -58,7 +58,7 @@ public enum Lot {
 	Maynard_Structure ("4_MA3", 4, new BigDecimal(42.2789278), new BigDecimal(-83.7421086), 950), //Checked 
 	South_Ashley_Lot ("4_SO9", 4, new BigDecimal(42.2793726), new BigDecimal(-83.7498497), 55), //Checked 
 	
-	//Seattle
+	//Seattle (8)
 	//Pike_Place ("5_G2", 5, new BigDecimal(47.608848), new BigDecimal(-122.341942)), no data
 	Third_and_Stewart ("5_G3", 5, new BigDecimal(47.611310), new BigDecimal(-122.339771), 1092), //Checked  non working all day
 	Pacific_Place ("5_G4", 5, new BigDecimal(47.613155), new BigDecimal(-122.335458), 2000), //Checked  non working all day
@@ -74,7 +74,7 @@ public enum Lot {
 	//Waterfront_Place ("5_G19", 5, new BigDecimal(47.604246), new BigDecimal(-122.337949)),
 	//West_Edge ("5_G22", 5, new BigDecimal(47.609566), new BigDecimal(-122.338821), ),
 	
-	//SantaBarbara
+	//SantaBarbara (13)
 	Lot_6 ("6_0", 6, new BigDecimal(34.424597), new BigDecimal(-119.704160), 570), //Checked
 	Lot_7 ("6_1", 6, new BigDecimal(34.423415), new BigDecimal(-119.702723), 260), //Checked
 	Lot_8 ("6_2", 6, new BigDecimal(34.422448), new BigDecimal(-119.702037), 120), //Checked
@@ -89,7 +89,7 @@ public enum Lot {
 	Lot_4 ("6_13", 6, new BigDecimal(34.422139), new BigDecimal(-119.704554), 120), //Checked
 	Lot_5 ("6_14", 6, new BigDecimal(34.423078), new BigDecimal(-119.705953), 195), //Checked
 
-	//Winchester
+	//Winchester (8)
 	Chesil_St_MSCP ("7_1", 7, new BigDecimal(51.060328), new BigDecimal(-1.305676), 572), //Checked not working all day
 	South_Winchester_PandR ("7_2", 7, new BigDecimal(51.032660), new BigDecimal(-1.328583), 850), //Checked not working all day
 	Tower_St ("7_3", 7, new BigDecimal(51.064961), new BigDecimal(-1.318118), 509), //Checked not working all day
@@ -99,7 +99,7 @@ public enum Lot {
 	Middlebrook_St ("7_10", 7, new BigDecimal(51.063438), new BigDecimal(-1.311099), 141), //Checked not working all day
 	Pitt_PandR ("7_12", 7, new BigDecimal(51.053344), new BigDecimal(-1.348075), 185), //Checked not working all day
 	
-	//SantaMonica
+	//SantaMonica (18)
 	Library ("8_76", 8, new BigDecimal(34.01900), new BigDecimal(-118.49361), 532), //Checked not working all day
 	CivicCenter ("8_6767", 8, new BigDecimal(34.01158), new BigDecimal(-118.48997), 705), //Checked 
 	Pier_Deck ("8_8068", 8, new BigDecimal(34.009333), new BigDecimal(-118.496389), 250),  //Checked posle opredelen datum ima pomal broj na mesta
